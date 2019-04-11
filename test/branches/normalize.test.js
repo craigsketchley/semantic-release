@@ -192,14 +192,39 @@ test('Release branches - 3 release branches', t => {
 test('Release branches - 2 release branches', t => {
   const release = [
     {name: 'master', tags: toTags(['1.0.0', '1.0.1', '1.1.0', '1.1.1', '1.2.0'])},
-    {name: 'next', tags: toTags(['1.0.0', '1.0.1', '1.1.0', '1.1.1', '1.2.0', '2.0.0', '2.0.1', '2.1.0'])},
+    {name: 'next', tags: toTags(['1.0.0', '1.0.1', '1.1.0', '1.1.1', '1.2.0', '1.3.0', '1.3.1', '1.4.0'])},
   ];
 
   t.deepEqual(
     normalize.release({release}).map(({type, name, range, accept, channel}) => ({type, name, range, accept, channel})),
     [
-      {type: 'release', name: 'master', range: '>=1.2.0 <2.0.0', accept: ['patch', 'minor'], channel: undefined},
-      {type: 'release', name: 'next', range: '>=2.1.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
+      {type: 'release', name: 'master', range: '>=1.2.0 <1.3.0', accept: ['patch'], channel: undefined},
+      {type: 'release', name: 'next', range: '>=1.4.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
+    ]
+  );
+});
+
+test('Release branches - 2 release branches with one tag', t => {
+  const release = [{name: 'master', tags: toTags(['1.0.0'])}, {name: 'next', tags: toTags(['1.0.0'])}];
+
+  t.deepEqual(
+    normalize.release({release}).map(({type, name, range, accept, channel}) => ({type, name, range, accept, channel})),
+    [
+      {type: 'release', name: 'master', range: '>=1.0.0 <1.1.0', accept: ['patch'], channel: undefined},
+      {type: 'release', name: 'next', range: '>=1.1.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
+    ]
+  );
+});
+
+test('Release branches - 2 release branches with tags less than 1.0.0', t => {
+  const tags = ['0.9.0', '0.9.1', '0.9.2', '0.9.3', '0.10.0', '0.10.1'];
+  const release = [{name: 'master', tags: toTags(tags)}, {name: 'next', tags: toTags(tags)}];
+
+  t.deepEqual(
+    normalize.release({release}).map(({type, name, range, accept, channel}) => ({type, name, range, accept, channel})),
+    [
+      {type: 'release', name: 'master', range: '>=0.10.1 <0.11.0', accept: ['patch'], channel: undefined},
+      {type: 'release', name: 'next', range: '>=0.11.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
     ]
   );
 });
@@ -245,8 +270,8 @@ test('Release branches - Handle missing previous tags in branch history', t => {
   t.deepEqual(
     normalize.release({release}).map(({type, name, range, accept, channel}) => ({type, name, range, accept, channel})),
     [
-      {type: 'release', name: 'master', range: '>=2.0.0 <3.0.0', accept: ['patch', 'minor'], channel: undefined},
-      {type: 'release', name: 'next', range: '>=3.0.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
+      {type: 'release', name: 'master', range: '>=2.0.0 <2.1.0', accept: ['patch'], channel: undefined},
+      {type: 'release', name: 'next', range: '>=2.1.0', accept: ['patch', 'minor', 'major'], channel: 'next'},
     ]
   );
 });
